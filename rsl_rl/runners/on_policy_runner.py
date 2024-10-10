@@ -186,24 +186,24 @@ class OnPolicyRunner:
                 value = torch.mean(infotensor)
                 # log to logger and terminal
                 if "/" in key:
-                    self.writer.add_scalar(key, value, locs["it"])
+                    self.writer.add_scalar(key, value, self.tot_timesteps)
                     ep_string += f"""{f'{key}:':>{pad}} {value:.4f}\n"""
                 else:
-                    self.writer.add_scalar("Episode/" + key, value, locs["it"])
+                    self.writer.add_scalar("Episode/" + key, value, self.tot_timesteps)
                     ep_string += f"""{f'Mean episode {key}:':>{pad}} {value:.4f}\n"""
         mean_std = self.alg.actor_critic.std.mean()
         fps = int(self.num_steps_per_env * self.env.num_envs / (locs["collection_time"] + locs["learn_time"]))
 
-        self.writer.add_scalar("Loss/value_function", locs["mean_value_loss"], locs["it"])
-        self.writer.add_scalar("Loss/surrogate", locs["mean_surrogate_loss"], locs["it"])
-        self.writer.add_scalar("Loss/learning_rate", self.alg.learning_rate, locs["it"])
-        self.writer.add_scalar("Policy/mean_noise_std", mean_std.item(), locs["it"])
-        self.writer.add_scalar("Perf/total_fps", fps, locs["it"])
-        self.writer.add_scalar("Perf/collection time", locs["collection_time"], locs["it"])
-        self.writer.add_scalar("Perf/learning_time", locs["learn_time"], locs["it"])
+        self.writer.add_scalar("Loss/value_function", locs["mean_value_loss"], self.tot_timesteps)
+        self.writer.add_scalar("Loss/surrogate", locs["mean_surrogate_loss"], self.tot_timesteps)
+        self.writer.add_scalar("Loss/learning_rate", self.alg.learning_rate, self.tot_timesteps)
+        self.writer.add_scalar("Policy/mean_noise_std", mean_std.item(), self.tot_timesteps)
+        self.writer.add_scalar("Perf/total_fps", fps, self.tot_timesteps)
+        self.writer.add_scalar("Perf/collection time", locs["collection_time"], self.tot_timesteps)
+        self.writer.add_scalar("Perf/learning_time", locs["learn_time"], self.tot_timesteps)
         if len(locs["rewbuffer"]) > 0:
-            self.writer.add_scalar("Train/mean_reward", statistics.mean(locs["rewbuffer"]), locs["it"])
-            self.writer.add_scalar("Train/mean_episode_length", statistics.mean(locs["lenbuffer"]), locs["it"])
+            self.writer.add_scalar("Train/mean_reward", statistics.mean(locs["rewbuffer"]), self.tot_timesteps)
+            self.writer.add_scalar("Train/mean_episode_length", statistics.mean(locs["lenbuffer"]), self.tot_timesteps)
             if self.logger_type != "wandb":  # wandb does not support non-integer x-axis logging
                 self.writer.add_scalar("Train/mean_reward/time", statistics.mean(locs["rewbuffer"]), self.tot_time)
                 self.writer.add_scalar(

@@ -21,8 +21,11 @@ class WandbSummaryWriter(SummaryWriter):
 
         try:
             project = cfg["wandb_project"]
+            group = cfg["wandb_run_group"]
         except KeyError:
-            raise KeyError("Please specify wandb_project in the runner config, e.g. legged_gym.")
+            raise KeyError(
+                "Please specify wandb_project in the runner config, e.g. legged_gym."
+            )
 
         try:
             entity = os.environ["WANDB_USERNAME"]
@@ -31,7 +34,7 @@ class WandbSummaryWriter(SummaryWriter):
                 "Wandb username not found. Please run or add to ~/.bashrc: export WANDB_USERNAME=YOUR_USERNAME"
             )
 
-        wandb.init(project=project, entity=entity)
+        wandb.init(project=project, entity=entity, group=group)
 
         # Change generated name to project-number format
         wandb.run.name = project + wandb.run.name.split("-")[-1]
@@ -49,7 +52,10 @@ class WandbSummaryWriter(SummaryWriter):
         wandb.config.update({"runner_cfg": runner_cfg})
         wandb.config.update({"policy_cfg": policy_cfg})
         wandb.config.update({"alg_cfg": alg_cfg})
-        wandb.config.update({"env_cfg": asdict(env_cfg)})
+        if isinstance(env_cfg, dict):
+            wandb.config.update({"env_cfg": env_cfg})
+        elif env_cfg:
+            wandb.config.update({"env_cfg": asdict(env_cfg)})
 
     def _map_path(self, path):
         if path in self.name_map:
@@ -57,7 +63,9 @@ class WandbSummaryWriter(SummaryWriter):
         else:
             return path
 
-    def add_scalar(self, tag, scalar_value, global_step=None, walltime=None, new_style=False):
+    def add_scalar(
+        self, tag, scalar_value, global_step=None, walltime=None, new_style=False
+    ):
         super().add_scalar(
             tag,
             scalar_value,
